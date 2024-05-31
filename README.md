@@ -23,6 +23,8 @@ pip install -r requirements.txt
 
 ### 2. 下载模型
 
+由于本人修改该模型中的键值key，删掉了checkpoint的多余信息，因此本项目不兼容官方原版checkpoint
+
 从huggingface
 ```bash
 wget https://huggingface.co/lovemefan/telespeech/resolve/main/finetune_large_kespeech.pt?download=true -O finetune_large_kespeech.pt
