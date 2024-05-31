@@ -22,15 +22,7 @@ def load_checkpoint(checkpoint_path, model, device=torch.device("cpu")):
     with open(checkpoint_path, "rb") as f:
         state = torch.load(f)
 
-    new_state_dict = OrderedDict()
-    for k, v in state.items():
-        new_state_dict[
-            k.replace("w2v_encoder.", "")
-            .replace("w2v_model.", "")
-            .replace(".AUDIO", "")
-        ] = v
-
-    model.load_state_dict(new_state_dict)
+    model.load_state_dict(state)
 
 
 def read_wave(filename) -> torch.Tensor:
