@@ -2,9 +2,6 @@
 <h2 align="center">Telespeech-asr-python</h2>
 <br/>
 
-[![versions](https://img.shields.io/badge/python-3.8|3.9|3.10|3.11-blue)](https://github.com/lovemefan/paraformer-online-python)
-
-[English readme](README-EN.md)
 
 [TeleSpeech-ASR（星辰超多方言语音识别大模型）) ](https://github.com/Tele-AI/TeleSpeech-ASR)是有中国电信人工智能研究院（TeleAI）发布业内首个支持30种方言自由混说的语音识别大模型。
 
