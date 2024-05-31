@@ -3,9 +3,9 @@
 <br/>
 
 
-[TeleSpeech-ASR（星辰超多方言语音识别大模型）) ](https://github.com/Tele-AI/TeleSpeech-ASR)是有中国电信人工智能研究院（TeleAI）发布业内首个支持30种方言自由混说的语音识别大模型。
+[TeleSpeech-ASR（星辰超多方言语音识别大模型）) ](https://github.com/Tele-AI/TeleSpeech-ASR)是由中国电信人工智能研究院（TeleAI）发布业内首个支持30种方言自由混说的语音识别大模型。
 
-实际上该模型与语言模型不太一致， 只是修改版的data2vec， 整个模型类似于wav2vec_ctc。
+首先感谢电信团队的开源奉献，该模型目前来看修改版的data2vec， 整个模型类似于wav2vec_ctc， 期待后续技术报告及论文的发布。
 
 由于原项目依赖fairseq和kaldi预处理， 光跑起来就非常麻烦，本项目提供一个不依赖与fairseq和kaldi的运行时方便模型测试。
 
