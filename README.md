@@ -33,10 +33,40 @@ wget https://huggingface.co/lovemefan/telespeech/resolve/main/finetune_large_kes
 wget https://hf-mirror.com/lovemefan/telespeech/resolve/main/finetune_large_kespeech.pt?download=true -O finetune_large_kespeech.pt
 ```
 
-### 推理
+### 3. 模型导出
 
+1. torchscript 导出
+
+```bash
+PYTHONPATH=$PWD python telespeechasr/torchscript/torchscript_export.py --model_path /path/torch_checkpoint.pt \
+--output_dir /path/output_dir
+```
+2. onnx 导出
+
+```bash
+PYTHONPATH=$PWD python telespeechasr/onnx/onnx_export.py --model_path /path/torch_checkpoint.pt
+--output_dir /path/output_dir
+```
+
+### 4. 模型推理（目前还不支持batch解码）
+
+**以下模型都可在huggingface [下载](https://huggingface.co/lovemefan/telespeech/tree/main)**
+
+1. torch推理， 支持cpu, cuda, mps
 ```bash
 
 PYTHONPATH=$PWD python telespeechasr/torch/infer.py --model_path /path/finetune_large_kespeech.pt --audio_path /path/audio.wav
 ```
+2. torchscript 推理， 支持cpu, cuda, mps
 
+```bash
+PYTHONPATH=$PWD python telespeechasr/torchscript/torchscript_infer.py --model_path /path/model_export_torchscript.pt
+--audio_path /path/audio.wav
+--device cpu
+```
+
+3. onnx 推理, 支持gpu，cpu推理
+```bash
+PYTHONPATH=$PWD python telespeechasr/onnx/onnx_infer.py --model_path /path/model_export.onnx
+--audio_path /path/audio.wav
+```
