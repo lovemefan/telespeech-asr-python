@@ -103,35 +103,26 @@ class ConvFeatureExtractionModel(nn.Module):
 
 
 class BlockEncoder(nn.Module):
-    def __init__(self, blocks, norm_layer, layer_norm_first, layerdrop, dropout):
+    def __init__(self, blocks, norm_layer, layer_norm_first):
         super().__init__()
         self.blocks = blocks
         self.norm = norm_layer
         self.layer_norm_first = layer_norm_first
-        self.layerdrop = layerdrop
-        self.dropout = nn.Dropout(dropout, inplace=True)
 
     def forward(self, x, padding_mask, alibi_bias, alibi_scale):
         if self.norm is not None and not self.layer_norm_first:
             x = self.norm(x)
 
-        x = self.dropout(x)
-
         for i, blk in enumerate(self.blocks):
-            if (
-                not self.training
-                or self.layerdrop == 0
-                or (np.random.random() > self.layerdrop)
-            ):
-                ab = alibi_bias
-                if ab is not None and alibi_scale is not None:
-                    scale = (
-                        alibi_scale[i]
-                        if alibi_scale.size(0) > 1
-                        else alibi_scale.squeeze(0)
-                    )
-                    ab = ab * scale.type_as(ab)
-                x, _ = blk(x, padding_mask, ab)
+            ab = alibi_bias
+            if ab is not None and alibi_scale is not None:
+                scale = (
+                    alibi_scale[i]
+                    if alibi_scale.size(0) > 1
+                    else alibi_scale.squeeze(0)
+                )
+                ab = ab * scale.type_as(ab)
+            x, _ = blk(x, padding_mask, ab)
 
         if self.norm is not None and self.layer_norm_first:
             x = self.norm(x)
@@ -229,7 +220,6 @@ class AudioEncoder(ModalitySpecificEncoder):
         make_block: Callable[[float], nn.ModuleList],
         norm_layer: Callable[[int], nn.LayerNorm],
         layer_norm_first: bool = False,
-        alibi_biases: Dict = {},
         feature_encoder_spec: str = "[(512, 3, 2), (512, 3, 2)]",
         input_feature_ndim: int = 40,
         extractor_mode: str = "layer_norm",
@@ -240,8 +230,6 @@ class AudioEncoder(ModalitySpecificEncoder):
         start_drop_path_rate: float = 0.0,
         end_drop_path_rate: float = 0.0,
         prenet_depth: int = 8,
-        prenet_layerdrop: float = 0.1,
-        prenet_dropout: float = 0.0,
     ):
         self.feature_enc_layers = eval(feature_encoder_spec)
         feature_embed_dim = self.feature_enc_layers[-1][0]
@@ -297,13 +285,10 @@ class AudioEncoder(ModalitySpecificEncoder):
             nn.ModuleList(make_block(dpr[i]) for i in range(prenet_depth)),
             norm_layer(embed_dim) if not layer_norm_first else None,
             layer_norm_first,
-            prenet_layerdrop,
-            prenet_dropout,
         )
 
         # decoder = Decoder1d(embed_dim)
         decoder = None
-        alibi_bias_fn = partial(get_alibi_bias, alibi_biases=alibi_biases)
 
         super().__init__(
             embed_dim=embed_dim,
@@ -313,7 +298,6 @@ class AudioEncoder(ModalitySpecificEncoder):
             relative_positional_encoder=positional_encoder,
             context_encoder=context_encoder,
             decoder=decoder,
-            get_alibi_bias=alibi_bias_fn,
         )
 
     def convert_padding_mask(self, x, padding_mask):

@@ -1,18 +1,11 @@
 import math
 from collections import namedtuple
-from enum import Enum, auto
-from typing import Callable, Optional, Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 import torch
 from torch import functional as F
 from torch import nn
-
-# class Modality(Enum):
-#     AUDIO = auto()
-#     IMAGE = auto()
-#     TEXT = auto()
-
 
 MaskSeed = namedtuple("MaskSeed", ["seed", "update", "ids"])
 MaskInfo = namedtuple("MaskInfo", ["x_unmasked", "mask", "ids_restore", "ids_keep"])
@@ -234,7 +227,9 @@ def get_alibi(
 ):
     def get_slopes(n):
         def get_slopes_power_of_2(n):
-            start = 2 ** (-(2 ** -(math.log2(n) - 3)))
+            # 2 ** (-(2 ** -(math.log2(n) - 3))) equals 2 ** -(8/n)
+            # start = 2 ** (-(2 ** -(math.log2(n) - 3)))
+            start = 2 ** -(8 / n)
             ratio = start
             return [start * ratio**i for i in range(n)]
 
@@ -242,7 +237,10 @@ def get_alibi(
         # a. This function has some good properties that only occur when
         # the input is a power of 2. To maintain that even when the number
         # of heads is not a power of 2, we use this workaround.
-        if math.log2(n).is_integer():
+
+        # math.log2(n).is_integer() equals  n & (n - 1) == 0
+        # if math.log2(n).is_integer():
+        if n & (n - 1) == 0:
             return get_slopes_power_of_2(n)
         else:
             closest_power_of_2 = 2 ** math.floor(math.log2(n))
@@ -312,7 +310,6 @@ def gather_unmasked_mask(x: torch.Tensor, mask_info: MaskInfo) -> torch.Tensor:
 
 
 def get_alibi_bias(
-    alibi_biases,
     batch_size,
     time_steps,
     heads,
@@ -321,28 +318,13 @@ def get_alibi_bias(
     dims=1,
     distance="manhattan",
 ):
-    cache_key = f"{dims}_{heads}_{distance}"
-
-    buffered = alibi_biases.get(cache_key, None)
-
     target_size = heads * batch_size
-    if (
-        buffered is None
-        or buffered.size(0) < target_size
-        or buffered.size(1) < time_steps
-        or buffered.dtype != dtype
-        or buffered.device != device
-    ):
-        bt = max(time_steps, buffered.size(1) if buffered is not None else 0)
-        bn = max(target_size, buffered.size(0) if buffered is not None else 0) // heads
 
-        buffered = (
-            get_alibi(bt, heads, dims=dims, distance=distance)
-            .to(dtype=dtype, device=device)
-            .repeat(bn, 1, 1)
-        )
-
-        alibi_biases[cache_key] = buffered
+    buffered = (
+        get_alibi(time_steps, heads, dims=dims, distance=distance)
+        .to(dtype=dtype, device=device)
+        .repeat(target_size, 1, 1)
+    )
 
     b = buffered[:target_size, :time_steps, :time_steps]
     b = b.view(batch_size, heads, time_steps, time_steps)
@@ -428,7 +410,6 @@ class ModalitySpecificEncoder(nn.Module):
         relative_positional_encoder: Optional[nn.Module],
         context_encoder: nn.Module,
         decoder: nn.Module,
-        get_alibi_bias: Optional[Callable[[int, int, str, str], torch.Tensor]],
         num_extra_tokens: int = 0,
         prenet_depth: int = 8,
         model_depth: int = 16,

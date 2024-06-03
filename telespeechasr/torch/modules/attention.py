@@ -89,11 +89,6 @@ class AltAttention(nn.Module):
 
         self.cosine_attention = cosine_attention
 
-        if cosine_attention:
-            self.logit_scale = nn.Parameter(
-                torch.log(10 * torch.ones((num_heads, 1, 1))), requires_grad=True
-            )
-
     def forward(self, x, padding_mask=None, alibi_bias=None):
         B, N, C = x.shape
         qkv = (
@@ -109,16 +104,8 @@ class AltAttention(nn.Module):
 
         dtype = q.dtype
 
-        if self.cosine_attention:
-            # cosine attention
-            attn = F.normalize(q, dim=-1) @ F.normalize(k, dim=-1).transpose(-2, -1)
-            logit_scale = torch.clamp(
-                self.logit_scale, max=torch.log(torch.tensor(1.0 / 0.01))
-            ).exp()
-            attn = attn * logit_scale
-        else:
-            q = q * self.scale
-            attn = q @ k.transpose(-2, -1)
+        q = q * self.scale
+        attn = q @ k.transpose(-2, -1)
 
         if alibi_bias is not None:
             attn = attn.type_as(alibi_bias)

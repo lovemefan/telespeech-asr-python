@@ -23,6 +23,7 @@ def load_checkpoint(checkpoint_path, model, device=torch.device("cpu")):
         state = torch.load(f)
 
     model.load_state_dict(state)
+    return model
 
 
 def read_wave(filename) -> torch.Tensor:

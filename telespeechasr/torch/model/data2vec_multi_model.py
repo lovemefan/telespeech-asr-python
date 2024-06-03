@@ -80,33 +80,6 @@ class Data2VecMultiModel(nn.Module):
         self.norm = None
 
         self.proj = nn.Linear(embed_dim, vocab_size)
-
-        # if self.cfg.mae_init:
-        #     self.apply(self._init_weights)
-        # else:
-        #     from fairseq.modules.transformer_sentence_encoder import init_bert_params
-        #
-        #     self.apply(init_bert_params)
-
-        # for mod_enc in self.modality_encoders.values():
-        #     mod_enc.reset_parameters()
-
-        # if not skip_ema:
-        #     # self.ema = self.make_ema_teacher(ema_decay)
-        #     self.shared_decoder = (
-        #         Decoder1d(embed_dim) if shared_decoder is not None else None
-        #     )
-        #     if self.shared_decoder is not None:
-        #         self.shared_decoder.apply(self._init_weights)
-        #
-        #     self.recon_proj = None
-        #     if recon_loss > 0:
-        #         self.recon_proj = nn.Linear(embed_dim, embed_dim)
-
-        # for pn, p in self.named_parameters():
-        #     if len(p.shape) == 1 or pn.endswith(".bias") or "alibi_scale" in pn:
-        #         p.optim_overrides = {"optimizer": {"weight_decay_scale": 0}}
-
         self.num_updates = 0
 
     def state_dict(self, destination=None, prefix="", keep_vars=False):
