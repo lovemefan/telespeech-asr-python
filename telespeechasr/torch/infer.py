@@ -10,14 +10,13 @@ from typing import Dict, List
 
 import kaldifeat
 import torch
-from torch import functional as F
 
 from telespeechasr.torch.model.data2vec_multi_model import Data2VecMultiModel
 from telespeechasr.torch.utils.utils import load_checkpoint, read_wave
 
 
 class InferenceProcessor:
-    def __init__(self, model_path, vocab_path=None):
+    def __init__(self, model_path, vocab_path=None, device: str = "cuda"):
         self.model_path = model_path
         self.vocab_path = vocab_path or os.path.join(
             os.path.dirname(__file__), "data", "vocab.json"
@@ -32,6 +31,7 @@ class InferenceProcessor:
         self.model = Data2VecMultiModel()
         load_checkpoint(model_path, self.model)
         self.model.eval()
+        self.model = self.model.to(device)
 
         opts = kaldifeat.MfccOptions()
         opts.device = torch.device("cpu")
@@ -84,10 +84,12 @@ class InferenceProcessor:
         return text
 
     @torch.no_grad()
-    def infer(self, audio_path):
+    def infer(self, audio_path, device="cuda"):
+        device = torch.device(device)
         wave = read_wave(audio_path)
         feats = self.mfcc(wave.cpu())
-        feats = self.postprocess(feats).unsqueeze(0)
+        feats = self.postprocess(feats).unsqueeze(0).to(device)
+
         extractor_out = self.model.modality_encoders(
             feats,
             torch.zeros(feats.shape[:2], dtype=torch.bool),
@@ -139,8 +141,14 @@ if __name__ == "__main__":
     args.add_argument("--model_path", type=str, required=True)
     args.add_argument("--audio_path", type=str, required=True)
     args.add_argument("--vocab_path", type=str, default=None)
+    args.add_argument(
+        "--device", type=str, default="cuda", choices=["cpu", "cuda", "mps"]
+    )
+
     args = args.parse_args()
 
-    inference_processor = InferenceProcessor(args.model_path, args.vocab_path)
-    asr_result = inference_processor.infer(args.audio_path)
+    inference_processor = InferenceProcessor(
+        args.model_path, args.vocab_path, device=args.device
+    )
+    asr_result = inference_processor.infer(args.audio_path, device=args.device)
     print(asr_result)
