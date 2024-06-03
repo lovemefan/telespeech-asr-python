@@ -5,11 +5,12 @@
 # @Email     :lovemefan@outlook.com
 import argparse
 import json
+import logging
 import os
 import warnings
 from pathlib import Path
-from typing import List, Union, Dict
-import logging
+from typing import Dict, List, Union
+
 import kaldifeat
 import numpy as np
 from onnxruntime import (
@@ -46,9 +47,9 @@ class OrtInferRuntimeSession:
 
         EP_list = []
         if (
-                device_id != "-1"
-                and get_device() == "GPU"
-                and cuda_ep in get_available_providers()
+            device_id != "-1"
+            and get_device() == "GPU"
+            and cuda_ep in get_available_providers()
         ):
             EP_list = [(cuda_ep, cuda_provider_options)]
         EP_list.append((cpu_ep, cpu_provider_options))
@@ -78,9 +79,7 @@ class OrtInferRuntimeSession:
                 RuntimeWarning,
             )
 
-    def __call__(
-            self, input_content: np.ndarray
-    ) -> np.ndarray:
+    def __call__(self, input_content: np.ndarray) -> np.ndarray:
         input_dict = dict(zip(self.get_input_names(), input_content[None, ...]))
         try:
             result = self.session.run(self.get_output_names(), input_dict)
@@ -89,12 +88,12 @@ class OrtInferRuntimeSession:
             raise RuntimeError("ONNXRuntime inferece failed.") from e
 
     def get_input_names(
-            self,
+        self,
     ):
         return [v.name for v in self.session.get_inputs()]
 
     def get_output_names(
-            self,
+        self,
     ):
         return [v.name for v in self.session.get_outputs()]
 
@@ -117,7 +116,9 @@ class OrtInferRuntimeSession:
 
 
 class TeleSpeechAsrInferSession:
-    def __init__(self, model_file, vocab_path=None, device_id=-1, intra_op_num_threads=4):
+    def __init__(
+        self, model_file, vocab_path=None, device_id=-1, intra_op_num_threads=4
+    ):
         self.vocab_path = vocab_path or os.path.join(
             os.path.dirname(__file__), "data", "vocab.json"
         )
@@ -127,7 +128,9 @@ class TeleSpeechAsrInferSession:
             self.id2vocab = {}
             for k, v in self.vocab2id.items():
                 self.id2vocab[v] = k
-        self.session = OrtInferRuntimeSession(model_file, device_id=device_id, intra_op_num_threads=intra_op_num_threads)
+        self.session = OrtInferRuntimeSession(
+            model_file, device_id=device_id, intra_op_num_threads=intra_op_num_threads
+        )
 
         opts = kaldifeat.MfccOptions()
         opts.frame_opts.dither = 0
@@ -178,7 +181,7 @@ class TeleSpeechAsrInferSession:
                 text += token
         return text
 
-    def infer(self,  audio_path):
+    def infer(self, audio_path):
         wave = read_wave(audio_path)
         feats = self.mfcc(wave.cpu())
         feats = self.postprocess(feats)[None, ...].cpu().numpy()
@@ -193,8 +196,7 @@ class TeleSpeechAsrInferSession:
         return result
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = argparse.ArgumentParser()
     args.add_argument("--model_path", type=str, required=True)
     args.add_argument("--audio_path", type=str, required=True)

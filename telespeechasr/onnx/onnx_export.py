@@ -46,11 +46,10 @@ if __name__ == "__main__":
         os.path.join(args.output_dir, f"model_export.onnx"),
         verbose=False,
         opset_version=11,
-        input_names=['feats'],
-        output_names=['logits'],
+        input_names=["feats"],
+        output_names=["logits"],
         dynamic_axes={
             "feats": {1: "T"},
             "encoder_out": {1: "T"},
         },
     )
-
