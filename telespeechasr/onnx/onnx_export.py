@@ -10,7 +10,7 @@ import torch
 
 from telespeechasr.torch.model.data2vec_multi_model import Data2VecMultiModel
 from telespeechasr.torch.utils.utils import load_checkpoint
-from telespeechasr.torchscript.export import data2vec_multo_model_export
+from telespeechasr.torchscript.torchscript_export import data2vec_multo_model_export
 
 
 def get_parser():

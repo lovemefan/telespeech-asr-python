@@ -79,4 +79,6 @@ if __name__ == "__main__":
     model = load_checkpoint(args.model_path, model)
     model_export = data2vec_multo_model_export(model)
     model_export = torch.jit.trace(model_export, (torch.randn(1, 155, 40)))
-    torch.jit.save(model_export, os.path.join(args.output_dir, f"model_export.pt"))
+    torch.jit.save(
+        model_export, os.path.join(args.output_dir, f"model_export_torchscript.pt")
+    )
