@@ -5,7 +5,9 @@
 # @Email     :lovemefan@outlook.com
 import argparse
 import json
+import logging
 import os
+import time
 from typing import Dict, List
 
 import kaldifeat
@@ -27,6 +29,7 @@ class InferenceProcessor:
             for k, v in self.vocab2id.items():
                 self.id2vocab[v] = k
 
+        logging.info(f"Loading model from {self.model_path}")
         self.model = torch.jit.load(self.model_path)
         self.model.eval()
         self.model = self.model.to(device)
@@ -83,6 +86,8 @@ class InferenceProcessor:
 
     @torch.no_grad()
     def infer(self, audio_path, device="cuda"):
+        logging.info("Decoding ...")
+        start_time = time.time()
         device = torch.device(device)
         wave = read_wave(audio_path)
         feats = self.mfcc(wave.cpu())
@@ -95,7 +100,7 @@ class InferenceProcessor:
         hypos = self.viterbi_decode(emissions)
 
         result = self.postprocess_sentence(hypos[0][0]["tokens"])
-
+        logging.info(f"Inference time: {time.time() - start_time}s")
         return result
 
 
@@ -109,6 +114,9 @@ if __name__ == "__main__":
     )
 
     args = args.parse_args()
+
+    formatter = "%(asctime)s %(levelname)s [%(filename)s:%(lineno)d] %(message)s"
+    logging.basicConfig(format=formatter, level=logging.INFO)
 
     inference_processor = InferenceProcessor(
         args.model_path, args.vocab_path, device=args.device

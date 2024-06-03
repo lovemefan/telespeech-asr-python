@@ -7,6 +7,7 @@ import argparse
 import json
 import logging
 import os
+import time
 import warnings
 from pathlib import Path
 from typing import Dict, List, Union
@@ -128,6 +129,8 @@ class TeleSpeechAsrInferSession:
             self.id2vocab = {}
             for k, v in self.vocab2id.items():
                 self.id2vocab[v] = k
+
+        logging.info(f"Loading model from {model_file}")
         self.session = OrtInferRuntimeSession(
             model_file, device_id=device_id, intra_op_num_threads=intra_op_num_threads
         )
@@ -186,12 +189,14 @@ class TeleSpeechAsrInferSession:
         feats = self.mfcc(wave.cpu())
         feats = self.postprocess(feats)[None, ...].cpu().numpy()
 
+        logging.info("Decoding ...")
+        start_time = time.time()
         model_output = self.session(feats)
         emissions = self.get_logits(model_output)
         emissions = emissions[0].transpose((1, 0, 2))
         hypos = self.viterbi_decode(emissions)
-
         result = self.postprocess_sentence(hypos[0][0]["tokens"])
+        logging.info(f"Inference time: {time.time() - start_time:.4}s")
 
         return result
 
@@ -204,6 +209,9 @@ if __name__ == "__main__":
     args.add_argument(
         "--device", type=str, default="cuda", choices=["cpu", "cuda", "mps"]
     )
+
+    formatter = "%(asctime)s %(levelname)s [%(filename)s:%(lineno)d] %(message)s"
+    logging.basicConfig(format=formatter, level=logging.INFO)
 
     args = args.parse_args()
     model = TeleSpeechAsrInferSession(args.model_path, args.vocab_path)
