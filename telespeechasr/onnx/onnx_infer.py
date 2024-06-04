@@ -10,10 +10,11 @@ import os
 import time
 import warnings
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Dict, List, Tuple
 
-import kaldifeat
+import kaldi_native_fbank as knf
 import numpy as np
+import soundfile as sf
 from onnxruntime import (
     GraphOptimizationLevel,
     InferenceSession,
@@ -21,8 +22,6 @@ from onnxruntime import (
     get_available_providers,
     get_device,
 )
-
-from telespeechasr.torch.utils.utils import read_wave
 
 
 class OrtInferRuntimeSession:
@@ -135,23 +134,25 @@ class TeleSpeechAsrInferSession:
             model_file, device_id=device_id, intra_op_num_threads=intra_op_num_threads
         )
 
-        opts = kaldifeat.MfccOptions()
+        opts = knf.MfccOptions()
+        # See https://github.com/Tele-AI/TeleSpeech-ASR/blob/master/mfcc_hires.conf
         opts.frame_opts.dither = 0
+
         opts.num_ceps = 40
+        opts.use_energy = False
+
         opts.mel_opts.num_bins = 40
         opts.mel_opts.low_freq = 40
         opts.mel_opts.high_freq = -200
-        opts.frame_opts.snip_edges = False
-        self.mfcc = kaldifeat.Mfcc(opts)
+        self.mfcc = knf.OnlineMfcc(opts)
         self.eps = 1e-5
 
         self.blank_weight = 0.0
         self.blank_mode = "add"
 
     def postprocess(self, feats):
-        assert feats.dim() == 2, feats.dim()
-        m = feats.mean(dim=0)
-        std = feats.std(dim=0)
+        m = feats.mean(axis=0, keepdims=True)
+        std = feats.std(axis=0, keepdims=True)
         feats = (feats - m) / (std + self.eps)
         return feats
 
@@ -184,10 +185,38 @@ class TeleSpeechAsrInferSession:
                 text += token
         return text
 
+    def load_audio(self, filename: str) -> Tuple[np.ndarray, int]:
+        data, sample_rate = sf.read(
+            filename,
+            always_2d=True,
+            dtype="float32",
+        )
+        data = data[:, 0]  # use only the first channel
+        samples = np.ascontiguousarray(data)
+        return samples, sample_rate
+
+    def get_features(self, file_path: str) -> np.ndarray:
+        samples, sample_rate = self.load_audio(file_path)
+
+        if sample_rate != 16000:
+            import librosa
+
+            samples = librosa.resample(samples, orig_sr=sample_rate, target_sr=16000)
+            sample_rate = 16000
+
+        samples *= 372768
+
+        self.mfcc.accept_waveform(16000, samples)
+        frames = []
+        for i in range(self.mfcc.num_frames_ready):
+            frames.append(self.mfcc.get_frame(i))
+
+        frames = np.stack(frames, axis=0)
+        return frames
+
     def infer(self, audio_path):
-        wave = read_wave(audio_path)
-        feats = self.mfcc(wave.cpu())
-        feats = self.postprocess(feats)[None, ...].cpu().numpy()
+        feats = self.get_features(audio_path)
+        feats = self.postprocess(feats)[None, ...]
 
         logging.info("Decoding ...")
         start_time = time.time()
