@@ -13,13 +13,21 @@
 
 ## 如何使用
 
-### 1. 安装kaldifest和依赖
+### 1. 安装依赖
 
-参看 [官方文档](https://github.com/csukuangfj/kaldifeat)
+torch版runtime需要安装kaldifest和requirements.txt里面的依赖
+kaldifest 安装参看 [官方文档](https://github.com/csukuangfj/kaldifeat)
 
 ```bash
 pip install -r requirements.txt
 ```
+
+
+onnxruntime 只需要安装requirements-onnxruntime.txt里面的依赖即可
+```bash
+pip install -r requirements-onnxruntime.txt
+```
+
 
 ### 2. 下载模型
 

@@ -1,0 +1,4 @@
+kaldi-native-fbank @ git+https://github.com/csukuangfj/kaldi-native-fbank.git@a97263c86b510225669454c33ea233923b650e2b
+numpy==1.24.4
+onnxruntime==1.18.0
+soundfile==0.12.1
