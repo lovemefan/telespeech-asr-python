@@ -204,7 +204,7 @@ class TeleSpeechAsrInferSession:
             samples = librosa.resample(samples, orig_sr=sample_rate, target_sr=16000)
             sample_rate = 16000
 
-        samples *= 372768
+        samples *= 32768
 
         self.mfcc.accept_waveform(16000, samples)
         frames = []
