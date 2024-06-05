@@ -11,6 +11,8 @@
 
 模型使用官方在KeSpeech数据集8种方言微调的模型
 
+现sherpa-onnx已支持c++ runtime， 见[详情](https://github.com/k2-fsa/sherpa-onnx/pull/970)。
+
 ## 如何使用
 
 ### 1. 安装依赖
