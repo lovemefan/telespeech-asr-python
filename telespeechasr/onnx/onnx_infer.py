@@ -123,7 +123,7 @@ class TeleSpeechAsrInferSession:
             os.path.dirname(__file__), "data", "vocab.json"
         )
 
-        with open(self.vocab_path, "r") as f:
+        with open(self.vocab_path, "r", encoding='utf-8') as f:
             self.vocab2id = json.load(f)
             self.id2vocab = {}
             for k, v in self.vocab2id.items():
