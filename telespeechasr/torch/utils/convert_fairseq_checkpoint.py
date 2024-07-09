@@ -43,12 +43,6 @@ def recursively_load_weights(fairseq_model):
         if is_needed:
             new_weights[name] = value
 
-
-
-
-
-
-    [print(i) for i in new_weights.keys()]
     return new_weights
 
 
