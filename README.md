@@ -30,10 +30,17 @@ onnxruntime 只需要安装requirements-onnxruntime.txt里面的依赖即可
 pip install -r requirements-onnxruntime.txt
 ```
 
+### 2. 官方fairseq模型转换（可选）
+由于本人修改该模型中的键值key，删掉了checkpoint的多余信息，因此本项目不兼容官方原版checkpoint。
+可以使用下面的脚本转换，或跳转到第三步下载模型。
 
-### 2. 下载模型
+```bash
+python convert_pt.py --input /path/finetune_large_kespeech.pt --output /path/torch_checkpoint.pt
+```
 
-由于本人修改该模型中的键值key，删掉了checkpoint的多余信息，因此本项目不兼容官方原版checkpoint
+### 3. 下载模型
+
+
 
 从huggingface
 ```bash
@@ -43,7 +50,7 @@ wget https://huggingface.co/lovemefan/telespeech/resolve/main/finetune_large_kes
 wget https://hf-mirror.com/lovemefan/telespeech/resolve/main/finetune_large_kespeech.pt?download=true -O finetune_large_kespeech.pt
 ```
 
-### 3. 模型导出
+### 4. 模型导出
 
 1. torchscript 导出
 
@@ -58,7 +65,7 @@ PYTHONPATH=$PWD python telespeechasr/onnx/onnx_export.py --model_path /path/torc
 --output_dir /path/output_dir
 ```
 
-### 4. 模型推理（目前还不支持batch解码）
+### 5. 模型推理（目前还不支持batch解码）
 
 **以下模型都可在huggingface [下载](https://huggingface.co/lovemefan/telespeech/tree/main)**
 
