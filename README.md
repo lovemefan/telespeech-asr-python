@@ -35,7 +35,7 @@ pip install -r requirements-onnxruntime.txt
 可以使用下面的脚本转换，或跳转到第三步下载模型。
 
 ```bash
-python convert_pt.py --input /path/finetune_large_kespeech.pt --output /path/torch_checkpoint.pt
+python telespeechasr/torch/utils/convert_fairseq_checkpoint.py --input /path/finetune_large_kespeech.pt --output /path/torch_checkpoint.pt
 ```
 
 ### 3. 下载模型
