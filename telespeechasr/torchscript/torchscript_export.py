@@ -75,7 +75,7 @@ def get_parser():
 
 if __name__ == "__main__":
     args = get_parser()
-    model = Data2VecMultiModel()
+    model = Data2VecMultiModel(vocab_size=7535)
     model = load_checkpoint(args.model_path, model)
     model_export = data2vec_multo_model_export(model)
     model_export = torch.jit.trace(model_export, (torch.randn(1, 155, 40)))

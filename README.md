@@ -52,13 +52,22 @@ wget https://hf-mirror.com/lovemefan/telespeech/resolve/main/finetune_large_kesp
 
 ### 4. 模型导出
 
+<font color='brown'>如果修改了词表，需要手动修改torchscript_export.py
+或onnx_export.py中的词表大小</font>
+```python
+Data2VecMultiModel(vocab_size=7535)
+```
+
 1. torchscript 导出
+
 
 ```bash
 PYTHONPATH=$PWD python telespeechasr/torchscript/torchscript_export.py --model_path /path/torch_checkpoint.pt \
 --output_dir /path/output_dir
 ```
 2. onnx 导出
+
+```
 
 ```bash
 PYTHONPATH=$PWD python telespeechasr/onnx/onnx_export.py --model_path /path/torch_checkpoint.pt

@@ -75,7 +75,7 @@ def export_onnx(args, model):
 
 if __name__ == "__main__":
     args = get_parser()
-    model = Data2VecMultiModel()
+    model = Data2VecMultiModel(vocab_size=7535)
     model = load_checkpoint(args.model_path, model)
     model_export = data2vec_multo_model_export(model)
     export_onnx(args, model_export)
